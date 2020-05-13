@@ -42,9 +42,9 @@ def parse_args():
         help="show job IDs next to releases and completions")
 
     parser.add_argument('-f', '--from', type=float, dest='start',
-        help='draw schedule starting at time TIME', metavar='TIME')
+        help='draw schedule starting at time TIME ms', metavar='TIME')
     parser.add_argument('-u', '--until', type=float, dest='end',
-        help='draw schedule up to time TIME', metavar='TIME')
+        help='draw schedule up to time TIME ms', metavar='TIME')
     parser.add_argument('-l', '--length', type=float, default=1000,
         help='draw schedule for LENGTH time units')
     parser.add_argument('-r', '--relative', action='store_true',
@@ -92,6 +92,7 @@ def main(args=sys.argv[1:]):
 
     if opts.start:
         # convert from ms
+        print "Start: ", opts.start
         opts.start = ms2ns(opts.start)
         # check if a relative time is given
         if opts.relative:
@@ -102,6 +103,7 @@ def main(args=sys.argv[1:]):
 
     if opts.end:
         # convert from ms
+        print "End: ", opts.end
         opts.end = ms2ns(opts.end)
         # check if a relative time is given
         if opts.relative:

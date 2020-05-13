@@ -61,6 +61,8 @@ static void print_stats(
 	lateness -= release->rec->data.release.deadline;
 	response  = completion->rec->data.completion.when;
 	response -= release->rec->data.release.release;
+  //printf("PP: %lu\n", release->rec->data.release.deadline -
+  //release->rec->data.release.release);
 
 	count_preemptions(release, completion, &preemptions, &migrations);
 
@@ -152,7 +154,11 @@ int main(int argc, char** argv)
 	unsigned int pid_filter = 0;
 	const char* name_filter = 0;
 	u32 period_filter = 0;
-
+  
+  // --SS-- this is for average utilization calculation
+  double runtime_sum = 0;
+  int invocations = 0;
+  long unsigned int period_temp;
 	int opt;
 
 	while ((opt = getopt(argc, argv, OPTSTR)) != -1) {
@@ -234,6 +240,9 @@ int main(int argc, char** argv)
 			continue;
 
 		print_task_info(t);
+    runtime_sum = 0;
+    invocations = 0;
+    period_temp = 0;
 		for_each_event(t, e) {
 			rec = e->rec;
 			if (rec->hdr.type == ST_RELEASE &&
@@ -245,6 +254,14 @@ int main(int argc, char** argv)
 					find(pos, ST_COMPLETION);
 					if (pos->rec->hdr.job == rec->hdr.job) {
 						print_stats(t, e, pos);
+            runtime_sum += nano_to_ms(pos->rec->data.completion.exec_time);
+            period_temp = e->rec->data.release.deadline -
+              e->rec->data.release.release;
+              if (period_temp != per(t)) {
+                //printf("%lu\n", period_temp);
+              }
+            //printf("D: %lu\n", e->rec->data.release.deadline);
+            invocations++;
 						break;
 					} else {
 						pos = pos->next;
@@ -254,6 +271,11 @@ int main(int argc, char** argv)
 
 			}
 		}
+    printf("%d, %.2lf, %.2lf\n", invocations, runtime_sum,
+    nano_to_ms(period_temp));
+    printf("Average utilization: %.2lf%%\n", 100 * (runtime_sum /
+    nano_to_ms(period_temp)) /
+    invocations);
 	}
 
 	return 0;
